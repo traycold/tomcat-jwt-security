@@ -5,18 +5,16 @@ import it.cosenonjaviste.security.jwt.model.AuthErrorResponse;
 import it.cosenonjaviste.security.jwt.utils.JwtConstants;
 import it.cosenonjaviste.security.jwt.utils.JwtTokenBuilder;
 import it.cosenonjaviste.security.jwt.utils.JwtTokenVerifier;
-
-import java.io.IOException;
-import java.nio.file.attribute.UserPrincipal;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.catalina.connector.Request;
 import org.apache.catalina.connector.Response;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.realm.GenericPrincipal;
 import org.apache.catalina.valves.ValveBase;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.file.attribute.UserPrincipal;
 
 /**
  * Perform a JWT authentication on requester resource.
@@ -48,7 +46,7 @@ public class JwtTokenValve extends ValveBase {
 				.findSecurityConstraints(request, request.getContext());
 
 		if ((constraints == null && !request.getContext().getPreemptiveAuthentication())
-				|| !hasAuthContraint(constraints)) {
+				|| !hasAuthConstraint(constraints)) {
 			this.getNext().invoke(request, response); 
 		} else {
 			handleAuthentication(request, response);
@@ -56,12 +54,17 @@ public class JwtTokenValve extends ValveBase {
 
 	}
 
-	private boolean hasAuthContraint(SecurityConstraint[] constraints) {
-		boolean authConstraint = true;
-		for (SecurityConstraint securityConstraint : constraints) {
-			authConstraint &= securityConstraint.getAuthConstraint();
+	private boolean hasAuthConstraint(SecurityConstraint[] constraints) {
+		if (constraints != null) {
+			boolean authConstraint = true;
+			for (SecurityConstraint securityConstraint : constraints) {
+				authConstraint &= securityConstraint.getAuthConstraint();
+			}
+			return authConstraint;
+		} else {
+			return false;
 		}
-		return authConstraint;
+
 	}
 
 	private void handleAuthentication(Request request, Response response)
